@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上海海港 · 赛程日历</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--line:#e5e7eb;--txt:#1f2328;--muted:#6b7280;--accent:#c8102e}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--txt);font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{width:100%;max-width:520px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 26px}
+.badge{display:inline-block;background:#fdecef;color:var(--accent);font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px}
+h1{margin:14px 0 6px;font-size:23px;font-weight:700;letter-spacing:.3px}
+.sub{margin:0;color:var(--muted);font-size:14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:600;border:1px solid transparent}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.ghost{background:#fff;color:var(--txt);border-color:var(--line)}
+.meta{margin:18px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.meta b{color:var(--txt);font-weight:600}
+.ics{margin:10px 0 0;display:flex;gap:8px;align-items:center;background:#f3f4f6;border-radius:8px;padding:8px 10px}
+.ics code{font-size:12px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.mini{background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--txt);white-space:nowrap}
+.hint{font-size:12px;color:var(--muted);margin:12px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+<span class="badge">自动更新</span>
+<h1>上海海港 · 赛程日历</h1>
+<p class="sub">中超 / 中乙(梯队) / 亚冠 / 足协杯 · 一键订阅，自动同步</p>
+<div class="actions">
+<a class="btn primary" id="sub" href="shanghai_port.ics">订阅到日历</a>
+<a class="btn ghost" href="review.html">赛程核对面板</a>
+</div>
+<p class="hint">iPhone 点「订阅到日历」可直接唤起日历；Outlook 用下方链接「从 Internet 订阅」。</p>
+<div class="meta">
+<div>覆盖赛事：<b>中超 · 中乙(梯队) · 亚冠 · 足协杯</b></div>
+<div>自动更新：<b>每天 06:00</b>（GitHub Actions）</div>
+<div>最近生成：<b>2026-10-24 07:28</b></div>
+<div class="ics"><code id="ics">shanghai_port.ics</code><button class="mini" id="copy">复制链接</button></div>
+</div>
+</div></div>
+<script>
+(function(){
+var base = new URL(".", location.href).href;
+var ics = base + "shanghai_port.ics";
+var webcal = ics.replace(/^https:/, "webcal:");
+var a = document.getElementById("sub");
+if (a) { a.href = webcal; }
+var code = document.getElementById("ics");
+if (code) { code.textContent = ics; }
+var copy = document.getElementById("copy");
+if (copy) { copy.addEventListener("click", function(){
+  navigator.clipboard.writeText(ics).then(function(){
+    copy.textContent = "已复制";
+    setTimeout(function(){ copy.textContent = "复制链接"; }, 1500);
+  });
+}); }
+})();
+</script>
+</body>
+</html>
