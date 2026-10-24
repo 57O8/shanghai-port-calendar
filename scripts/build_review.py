@@ -9,6 +9,7 @@
 
 部署后访问：https://<用户名>.github.io/<仓库名>/review.html
 """
+import base64
 import json
 import os
 import shutil
@@ -24,6 +25,17 @@ INDEX_FILE = os.path.join(OUTPUT_DIR, "index.html")
 
 # 需要人工核对的赛事 -> 官方图代号
 REVIEW_COMPS = [("亚冠", "afc"), ("足协杯", "cfa")]
+
+# 作者信息（首页展示）——如需指向个人主页，替换下面对应的 URL 即可
+AUTHOR = "57O8"
+AUTHOR_TAGLINE = "上海海港球迷"
+# (显示名, 链接, 样式类, 附加标识如抖音号)；排序即展示顺序
+SOCIALS = [
+    ("抖音", "https://v.douyin.com/dhbpIJOP4PM/", "dy", "57O8_Tactics"),
+    ("微博", "https://weibo.com/u/1862203482", "wb", ""),
+    ("小红书", "https://www.xiaohongshu.com/user/profile/5d3405510000000011006339", "xhs", ""),
+]
+AVATAR_SRC = os.path.join(BASE_DIR, "assets", "ego.jpg")
 
 # Actions 中自动注入；本地运行时为空，则隐藏"编辑"按钮
 REPO = os.environ.get("GITHUB_REPOSITORY", "").strip()
@@ -62,6 +74,7 @@ footer li{margin:5px 0}
 .btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:9px 15px;border-radius:8px;font-size:13px}
 .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
 code{background:#f3f4f6;padding:2px 6px;border-radius:4px}
+.sig{font-size:12px;color:var(--muted);margin-top:22px}
 @media (max-width:640px){.col-img,.col-tbl{flex:1 1 100%}}
 """
 
@@ -84,6 +97,20 @@ h1{margin:14px 0 6px;font-size:23px;font-weight:700;letter-spacing:.3px}
 .ics code{font-size:12px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .mini{background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--txt);white-space:nowrap}
 .hint{font-size:12px;color:var(--muted);margin:12px 0 0}
+.profile{display:flex;gap:16px;align-items:center}
+.avatar{width:86px;height:86px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 2px 10px rgba(200,16,46,.18);flex:none;background:#f3f4f6}
+.avatar-ph{display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--accent)}
+.who{min-width:0}
+.name{font-size:27px;font-weight:700;letter-spacing:.6px;line-height:1.1}
+.tagline{font-size:13px;color:var(--muted);margin-top:3px}
+.socials{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+.pill{font-size:12px;text-decoration:none;padding:4px 12px;border-radius:999px;font-weight:600;transition:opacity .15s}
+.pill:hover{opacity:.75}
+.pill .handle{font-weight:400;opacity:.6;margin-left:5px;font-size:11px}
+.pill.xhs{background:#fff1f3;color:#e0173b}
+.pill.dy{background:#f2f2f2;color:#111}
+.pill.wb{background:#fff3ec;color:#d9480f}
+.divider{height:1px;background:var(--line);margin:20px 0 18px}
 """
 
 
@@ -112,6 +139,19 @@ def sync_images():
         else:
             mapping[comp] = None
     return mapping
+
+
+def load_avatar_uri():
+    """读取头像并转成 data URI。
+
+    内嵌进 index.html 后页面自包含，不依赖部署时的资源路径，
+    换了 assets/ego.jpg 重新构建即可自动生效。
+    """
+    if not os.path.exists(AVATAR_SRC):
+        return None
+    with open(AVATAR_SRC, "rb") as f:
+        raw = f.read()
+    return "data:image/jpeg;base64," + base64.b64encode(raw).decode("ascii")
 
 
 def esc(text):
@@ -172,11 +212,39 @@ def render_section(comp, code, matches, img, img_time):
             '</div></section>')
 
 
-def render_index(now):
-    """生成站点首页 index.html：订阅入口 + 核对面板入口。
+def render_profile(avatar_uri):
+    """首页作者卡：头像 + 57O8 + 全平台账号（抖音置首）。"""
+    if avatar_uri:
+        avatar = '<img class="avatar" src="' + avatar_uri + '" alt="57O8 头像">'
+    else:
+        avatar = '<div class="avatar avatar-ph">57</div>'
+    pills = []
+    for item in SOCIALS:
+        name, url, cls = item[0], item[1], item[2]
+        handle = item[3] if len(item) > 3 else ""
+        label = esc(name)
+        if handle:
+            label += '<span class="handle">' + esc(handle) + '</span>'
+        pills.append('<a class="pill ' + cls + '" href="' + esc(url)
+                     + '" target="_blank" rel="noopener" title="' + esc(name)
+                     + (' ' + esc(handle) if handle else '') + '">'
+                     + label + '</a>')
+    pills = "\n".join(pills)
+    return (
+        '<div class="profile">\n' + avatar + '\n'
+        '<div class="who">\n'
+        '<div class="name">' + esc(AUTHOR) + '</div>\n'
+        '<div class="tagline">' + esc(AUTHOR_TAGLINE) + ' · 全平台同名</div>\n'
+        '<div class="socials">\n' + pills + '\n</div>\n'
+        '</div>\n</div>\n')
+
+
+def render_index(now, avatar_uri):
+    """生成站点首页 index.html：作者卡 + 订阅入口 + 核对面板入口。
 
     订阅链接在浏览器端用 location 拼出绝对地址，故部署到任意域名都正确。
     """
+    profile = render_profile(avatar_uri)
     head = ('<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n'
             '<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
@@ -184,6 +252,8 @@ def render_index(now):
             '<style>' + INDEX_CSS + '</style>\n</head>\n<body>\n')
     body = (
         '<div class="wrap"><div class="card">\n'
+        + profile +
+        '<div class="divider"></div>\n'
         '<span class="badge">自动更新</span>\n'
         '<h1>上海海港 · 赛程日历</h1>\n'
         '<p class="sub">中超 / 中乙(梯队) / 亚冠 / 足协杯 · 一键订阅，自动同步</p>\n'
@@ -223,6 +293,7 @@ def render_index(now):
 def main():
     manual = load_manual()
     imgs = sync_images()
+    avatar_uri = load_avatar_uri()
 
     sections = []
     for comp, code in REVIEW_COMPS:
@@ -267,6 +338,7 @@ def main():
         '<li>有差异 → 编辑 <code>manual_matches.json</code> → 提交，'
         'Actions 会自动重建日历。</li>\n'
         '</ol>\n<p>' + edit_html + '</p>\n'
+        '<p class="sig">上海海港赛程日历 · by ' + esc(AUTHOR) + '</p>\n'
         '</footer>\n</body>\n</html>\n')
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -275,7 +347,7 @@ def main():
     print("[done] 生成核对面板 -> " + OUTPUT_FILE)
 
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
-        f.write(render_index(now))
+        f.write(render_index(now, avatar_uri))
     print("[done] 生成首页     -> " + INDEX_FILE)
 
     for comp, code in REVIEW_COMPS:
