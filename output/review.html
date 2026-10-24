@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上海海港 · 赛程核对面板</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--line:#e5e7eb;--txt:#1f2328;--muted:#6b7280;--accent:#c8102e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+header{padding:24px 20px 4px;max-width:1240px;margin:0 auto}
+header h1{margin:0;font-size:21px;font-weight:600}
+header .sub{margin:8px 0 0;color:var(--muted);font-size:13px}
+main{max-width:1240px;margin:0 auto;padding:10px 20px 30px}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}
+section h2{margin:0 0 14px;font-size:16px;font-weight:600;display:flex;align-items:baseline;flex-wrap:wrap;gap:8px}
+.count{font-size:12px;color:var(--muted);font-weight:400}
+.imgtime{font-size:12px;color:var(--muted);font-weight:400}
+.row{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.col-img{flex:1 1 340px;min-width:280px}
+.col-tbl{flex:1 1 470px;min-width:320px;overflow-x:auto}
+.col-img img{max-width:100%;border:1px solid var(--line);border-radius:8px;display:block}
+.hint,.missing{font-size:12px;color:var(--muted);margin:6px 0 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#f3f4f6;font-weight:600;white-space:nowrap}
+td.c{white-space:nowrap}
+.vs{color:var(--muted)}
+tr.past td{color:var(--muted)}
+tr.past td.tag{color:var(--muted)}
+tr.future td.tag{color:var(--accent);font-weight:600}
+tbody tr:hover{background:#fafafa}
+.empty{color:var(--muted);text-align:center;padding:18px}
+footer{max-width:1240px;margin:0 auto;padding:0 20px 60px}
+footer h2{font-size:15px;margin:24px 0 8px}
+footer ol{margin:0 0 16px;padding-left:20px}
+footer li{margin:5px 0}
+.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:9px 15px;border-radius:8px;font-size:13px}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+code{background:#f3f4f6;padding:2px 6px;border-radius:4px}
+@media (max-width:640px){.col-img,.col-tbl{flex:1 1 100%}}
+</style>
+</head>
+<body>
+<header>
+<h1>上海海港 · 赛程核对面板</h1>
+<p class="sub">官方赛程图 vs 日历数据 · 共 12 场需核对 · 生成于 2026-10-24 15:02</p>
+</header>
+<main>
+<section><h2>亚冠 <span class="count">8 场</span><span class="imgtime">官方图更新：2026-10-24 14:28</span></h2><div class="row"><div class="col-img"><a href="images/afc.jpg" target="_blank" rel="noopener"><img src="images/afc.jpg" alt="亚冠官方赛程图"></a><p class="hint">点击图片可查看原图</p></div><div class="col-tbl"><table><thead><tr><th>日期</th><th>时间</th><th>对阵</th><th>场地</th><th>轮次</th><th>状态</th></tr></thead><tbody><tr class="past"><td class="c">2026-09-15</td><td class="c">18:00</td><td>拉查武里 <span class="vs">vs</span> <b>上海海港</b></td><td>拉查武里体育场</td><td class="c">联赛阶段 第1轮</td><td class="c tag">已赛</td></tr>
+<tr class="past"><td class="c">2026-10-13</td><td class="c">18:00</td><td><b>上海海港</b> <span class="vs">vs</span> 大田韩亚市民</td><td>上汽浦东足球场</td><td class="c">联赛阶段 第2轮</td><td class="c tag">已赛</td></tr>
+<tr class="future"><td class="c">2026-10-27</td><td class="c">18:00</td><td><b>上海海港</b> <span class="vs">vs</span> 河内公安</td><td>上汽浦东足球场</td><td class="c">联赛阶段 第3轮</td><td class="c tag">待赛</td></tr>
+<tr class="future"><td class="c">2026-11-03</td><td class="c">15:45</td><td>纽卡斯尔喷气机 <span class="vs">vs</span> <b>上海海港</b></td><td>纽卡斯尔体育场</td><td class="c">联赛阶段 第4轮</td><td class="c tag">待赛</td></tr>
+<tr class="future"><td class="c">2026-11-24</td><td class="c">20:15</td><td><b>上海海港</b> <span class="vs">vs</span> 武里南联</td><td>上汽浦东足球场</td><td class="c">联赛阶段 第5轮</td><td class="c tag">待赛</td></tr>
+<tr class="future"><td class="c">2026-12-01</td><td class="c">18:00</td><td>浦项铁人 <span class="vs">vs</span> <b>上海海港</b></td><td>浦项钢园球场</td><td class="c">联赛阶段 第6轮</td><td class="c tag">待赛</td></tr>
+<tr class="future"><td class="c">2027-02-09</td><td class="c">18:00</td><td><b>上海海港</b> <span class="vs">vs</span> 泰港</td><td>上汽浦东足球场</td><td class="c">联赛阶段 第7轮</td><td class="c tag">待赛</td></tr>
+<tr class="future"><td class="c">2027-02-16</td><td class="c">18:00</td><td>全北现代汽车 <span class="vs">vs</span> <b>上海海港</b></td><td>全州世界杯体育场</td><td class="c">联赛阶段 第8轮</td><td class="c tag">待赛</td></tr></tbody></table></div></div></section><section><h2>足协杯 <span class="count">4 场</span><span class="imgtime">官方图更新：2026-10-24 14:28</span></h2><div class="row"><div class="col-img"><a href="images/cfa.jpg" target="_blank" rel="noopener"><img src="images/cfa.jpg" alt="足协杯官方赛程图"></a><p class="hint">点击图片可查看原图</p></div><div class="col-tbl"><table><thead><tr><th>日期</th><th>时间</th><th>对阵</th><th>场地</th><th>轮次</th><th>状态</th></tr></thead><tbody><tr class="past"><td class="c">2026-06-19</td><td class="c">15:30</td><td>上海赛更达 <span class="vs">vs</span> <b>上海海港</b></td><td>乐动力临港足球综合运动中心</td><td class="c">第4轮</td><td class="c tag">已赛</td></tr>
+<tr class="past"><td class="c">2026-07-21</td><td class="c">19:00</td><td><b>上海海港</b> <span class="vs">vs</span> 深圳新鹏城</td><td>上汽浦东足球场</td><td class="c">第5轮</td><td class="c tag">已赛</td></tr>
+<tr class="past"><td class="c">2026-09-01</td><td class="c">19:35</td><td>山东泰山 <span class="vs">vs</span> <b>上海海港</b></td><td>济南奥体中心体育场</td><td class="c">第6轮</td><td class="c tag">已赛</td></tr>
+<tr class="future"><td class="c">2026-11-20</td><td class="c">19:35</td><td>北京国安 <span class="vs">vs</span> <b>上海海港</b></td><td>北京工人体育场</td><td class="c">半决赛</td><td class="c tag">待赛</td></tr></tbody></table></div></div></section>
+</main>
+<footer>
+<h2>30 秒核对法</h2>
+<ol>
+<li>看左侧官方图，找「上海海港」的场次。</li>
+<li>对照右侧表格，逐行核对 <b>日期 / 时间 / 主客 / 场地</b>（灰底为已赛，重点看红字「待赛」）。</li>
+<li>有差异 → 编辑 <code>manual_matches.json</code> → 提交，Actions 会自动重建日历。</li>
+</ol>
+<p><a class="btn" href="https://github.com/zbjzx/shanghai-port-calendar/edit/main/data/manual_matches.json" target="_blank" rel="noopener">编辑 manual_matches.json</a> <a class="btn ghost" href="https://github.com/zbjzx/shanghai-port-calendar/commits/main/data/manual_matches.json" target="_blank" rel="noopener">查看改动历史</a></p>
+</footer>
+</body>
+</html>
