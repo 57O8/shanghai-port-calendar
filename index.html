@@ -37,6 +37,12 @@ h1{margin:14px 0 6px;font-size:23px;font-weight:700;letter-spacing:.3px}
 .pill.dy{background:#f2f2f2;color:#111}
 .pill.wb{background:#fff3ec;color:#d9480f}
 .divider{height:1px;background:var(--line);margin:20px 0 18px}
+/* 备用订阅通道（jsDelivr CDN）：折叠起来，不干扰主流程 */
+.alt{margin:14px 0 0;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:#fcfcfd}
+.alt summary{cursor:pointer;font-size:13px;color:var(--txt);padding:10px 0;font-weight:600;outline:none}
+.alt summary::marker{color:var(--muted)}
+.alt p{margin:0 0 8px;font-size:12px;color:var(--muted);line-height:1.6}
+.alt[open]{padding-bottom:12px}
 </style>
 </head>
 <body>
@@ -65,9 +71,14 @@ h1{margin:14px 0 6px;font-size:23px;font-weight:700;letter-spacing:.3px}
 <div class="meta">
 <div>覆盖赛事：<b>中超 · 中乙(梯队) · 亚冠 · 足协杯</b></div>
 <div>自动更新：<b>每天 06:00</b>（GitHub Actions）</div>
-<div>最近生成：<b>2026-10-24 14:33</b></div>
+<div>最近生成：<b>2026-10-24 15:36</b></div>
 <div class="ics"><code id="ics">shanghai_port.ics</code><button class="mini" id="copy">复制链接</button></div>
 </div>
+<details class="alt" id="alt" hidden>
+<summary>订阅后一直不更新？试试备用链接</summary>
+<p>主链接走 GitHub Pages，改动后约 10 分钟生效；备用链接走 jsDelivr CDN，国内访问通常更稳，但内容更新最长会延迟约 12 小时。两者内容一致，<b>任选一个订阅即可——不要同时订阅两个</b>，否则同一场比赛会出现两次。</p>
+<div class="ics"><code id="mirror">&hellip;</code><button class="mini" id="copy2">复制</button></div>
+</details>
 </div></div>
 <script>
 (function(){
@@ -85,6 +96,24 @@ if (copy) { copy.addEventListener("click", function(){
     setTimeout(function(){ copy.textContent = "复制链接"; }, 1500);
   });
 }); }
+var repo = "57O8/shanghai-port-calendar";
+if (!repo) {
+  var h = location.hostname, seg = location.pathname.split("/").filter(Boolean);
+  if (/\.github\.io$/i.test(h) && seg.length) { repo = h.split(".")[0] + "/" + seg[0]; }
+}
+var altBox = document.getElementById("alt");
+if (repo && altBox) {
+  var mirror = "https://cdn.jsdelivr.net/gh/" + repo + "@gh-pages/shanghai_port.ics";
+  document.getElementById("mirror").textContent = mirror;
+  altBox.hidden = false;
+  var copy2 = document.getElementById("copy2");
+  if (copy2) { copy2.addEventListener("click", function(){
+    navigator.clipboard.writeText(mirror).then(function(){
+      copy2.textContent = "已复制";
+      setTimeout(function(){ copy2.textContent = "复制"; }, 1500);
+    });
+  }); }
+}
 })();
 </script>
 </body>
