@@ -31,7 +31,7 @@ AUTHOR = "57O8"
 AUTHOR_TAGLINE = "上海海港球迷"
 # (显示名, 链接, 样式类, 附加标识如抖音号)；排序即展示顺序
 SOCIALS = [
-    ("抖音", "https://v.douyin.com/dhbpIJOP4PM/", "dy", "57O8_Tactics"),
+    ("抖音", "https://v.douyin.com/SFy1bkRlnwA/", "dy", ""),
     ("微博", "https://weibo.com/u/1862203482", "wb", ""),
     ("小红书", "https://www.xiaohongshu.com/user/profile/5d3405510000000011006339", "xhs", ""),
 ]
