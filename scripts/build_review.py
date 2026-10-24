@@ -20,6 +20,7 @@ OFFICIAL_DIR = os.path.join(BASE_DIR, "official", "schedules")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 IMAGES_DIR = os.path.join(OUTPUT_DIR, "images")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "review.html")
+INDEX_FILE = os.path.join(OUTPUT_DIR, "index.html")
 
 # 需要人工核对的赛事 -> 官方图代号
 REVIEW_COMPS = [("亚冠", "afc"), ("足协杯", "cfa")]
@@ -62,6 +63,27 @@ footer li{margin:5px 0}
 .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
 code{background:#f3f4f6;padding:2px 6px;border-radius:4px}
 @media (max-width:640px){.col-img,.col-tbl{flex:1 1 100%}}
+"""
+
+INDEX_CSS = """
+:root{--bg:#f6f7f9;--card:#fff;--line:#e5e7eb;--txt:#1f2328;--muted:#6b7280;--accent:#c8102e}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--txt);font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{width:100%;max-width:520px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 26px}
+.badge{display:inline-block;background:#fdecef;color:var(--accent);font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px}
+h1{margin:14px 0 6px;font-size:23px;font-weight:700;letter-spacing:.3px}
+.sub{margin:0;color:var(--muted);font-size:14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:600;border:1px solid transparent}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.ghost{background:#fff;color:var(--txt);border-color:var(--line)}
+.meta{margin:18px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.meta b{color:var(--txt);font-weight:600}
+.ics{margin:10px 0 0;display:flex;gap:8px;align-items:center;background:#f3f4f6;border-radius:8px;padding:8px 10px}
+.ics code{font-size:12px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.mini{background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--txt);white-space:nowrap}
+.hint{font-size:12px;color:var(--muted);margin:12px 0 0}
 """
 
 
@@ -150,6 +172,54 @@ def render_section(comp, code, matches, img, img_time):
             '</div></section>')
 
 
+def render_index(now):
+    """生成站点首页 index.html：订阅入口 + 核对面板入口。
+
+    订阅链接在浏览器端用 location 拼出绝对地址，故部署到任意域名都正确。
+    """
+    head = ('<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n'
+            '<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+            '<title>上海海港 · 赛程日历</title>\n'
+            '<style>' + INDEX_CSS + '</style>\n</head>\n<body>\n')
+    body = (
+        '<div class="wrap"><div class="card">\n'
+        '<span class="badge">自动更新</span>\n'
+        '<h1>上海海港 · 赛程日历</h1>\n'
+        '<p class="sub">中超 / 中乙(梯队) / 亚冠 / 足协杯 · 一键订阅，自动同步</p>\n'
+        '<div class="actions">\n'
+        '<a class="btn primary" id="sub" href="shanghai_port.ics">订阅到日历</a>\n'
+        '<a class="btn ghost" href="review.html">赛程核对面板</a>\n'
+        '</div>\n'
+        '<p class="hint">iPhone 点「订阅到日历」可直接唤起日历；'
+        'Outlook 用下方链接「从 Internet 订阅」。</p>\n'
+        '<div class="meta">\n'
+        '<div>覆盖赛事：<b>中超 · 中乙(梯队) · 亚冠 · 足协杯</b></div>\n'
+        '<div>自动更新：<b>每天 06:00</b>（GitHub Actions）</div>\n'
+        '<div>最近生成：<b>' + now + '</b></div>\n'
+        '<div class="ics"><code id="ics">shanghai_port.ics</code>'
+        '<button class="mini" id="copy">复制链接</button></div>\n'
+        '</div>\n</div></div>\n')
+    script = (
+        '<script>\n(function(){\n'
+        'var base = new URL(".", location.href).href;\n'
+        'var ics = base + "shanghai_port.ics";\n'
+        'var webcal = ics.replace(/^https:/, "webcal:");\n'
+        'var a = document.getElementById("sub");\n'
+        'if (a) { a.href = webcal; }\n'
+        'var code = document.getElementById("ics");\n'
+        'if (code) { code.textContent = ics; }\n'
+        'var copy = document.getElementById("copy");\n'
+        'if (copy) { copy.addEventListener("click", function(){\n'
+        '  navigator.clipboard.writeText(ics).then(function(){\n'
+        '    copy.textContent = "已复制";\n'
+        '    setTimeout(function(){ copy.textContent = "复制链接"; }, 1500);\n'
+        '  });\n'
+        '}); }\n'
+        '})();\n</script>\n')
+    return head + body + script + '</body>\n</html>\n'
+
+
 def main():
     manual = load_manual()
     imgs = sync_images()
@@ -203,6 +273,11 @@ def main():
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html)
     print("[done] 生成核对面板 -> " + OUTPUT_FILE)
+
+    with open(INDEX_FILE, "w", encoding="utf-8") as f:
+        f.write(render_index(now))
+    print("[done] 生成首页     -> " + INDEX_FILE)
+
     for comp, code in REVIEW_COMPS:
         print("  " + comp + ": 官方图 = " + ("有" if imgs.get(comp) else "缺"))
 
