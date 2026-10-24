@@ -111,6 +111,12 @@ h1{margin:14px 0 6px;font-size:23px;font-weight:700;letter-spacing:.3px}
 .pill.dy{background:#f2f2f2;color:#111}
 .pill.wb{background:#fff3ec;color:#d9480f}
 .divider{height:1px;background:var(--line);margin:20px 0 18px}
+/* 备用订阅通道（jsDelivr CDN）：折叠起来，不干扰主流程 */
+.alt{margin:14px 0 0;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:#fcfcfd}
+.alt summary{cursor:pointer;font-size:13px;color:var(--txt);padding:10px 0;font-weight:600;outline:none}
+.alt summary::marker{color:var(--muted)}
+.alt p{margin:0 0 8px;font-size:12px;color:var(--muted);line-height:1.6}
+.alt[open]{padding-bottom:12px}
 """
 
 
@@ -269,7 +275,16 @@ def render_index(now, avatar_uri):
         '<div>最近生成：<b>' + now + '</b></div>\n'
         '<div class="ics"><code id="ics">shanghai_port.ics</code>'
         '<button class="mini" id="copy">复制链接</button></div>\n'
-        '</div>\n</div></div>\n')
+        '</div>\n'
+        '<details class="alt" id="alt" hidden>\n'
+        '<summary>订阅后一直不更新？试试备用链接</summary>\n'
+        '<p>主链接走 GitHub Pages，改动后约 10 分钟生效；备用链接走 jsDelivr CDN，'
+        '国内访问通常更稳，但内容更新最长会延迟约 12 小时。两者内容一致，'
+        '<b>任选一个订阅即可——不要同时订阅两个</b>，否则同一场比赛会出现两次。</p>\n'
+        '<div class="ics"><code id="mirror">&hellip;</code>'
+        '<button class="mini" id="copy2">复制</button></div>\n'
+        '</details>\n'
+        '</div></div>\n')
     script = (
         '<script>\n(function(){\n'
         'var base = new URL(".", location.href).href;\n'
@@ -286,6 +301,25 @@ def render_index(now, avatar_uri):
         '    setTimeout(function(){ copy.textContent = "复制链接"; }, 1500);\n'
         '  });\n'
         '}); }\n'
+        # ---- 备用订阅通道：jsDelivr CDN（不消耗 GitHub 带宽，更新延迟约 12h）----
+        'var repo = ' + json.dumps(REPO) + ';\n'
+        'if (!repo) {\n'
+        '  var h = location.hostname, seg = location.pathname.split("/").filter(Boolean);\n'
+        '  if (/\\.github\\.io$/i.test(h) && seg.length) { repo = h.split(".")[0] + "/" + seg[0]; }\n'
+        '}\n'
+        'var altBox = document.getElementById("alt");\n'
+        'if (repo && altBox) {\n'
+        '  var mirror = "https://cdn.jsdelivr.net/gh/" + repo + "@gh-pages/shanghai_port.ics";\n'
+        '  document.getElementById("mirror").textContent = mirror;\n'
+        '  altBox.hidden = false;\n'
+        '  var copy2 = document.getElementById("copy2");\n'
+        '  if (copy2) { copy2.addEventListener("click", function(){\n'
+        '    navigator.clipboard.writeText(mirror).then(function(){\n'
+        '      copy2.textContent = "已复制";\n'
+        '      setTimeout(function(){ copy2.textContent = "复制"; }, 1500);\n'
+        '    });\n'
+        '  }); }\n'
+        '}\n'
         '})();\n</script>\n')
     return head + body + script + '</body>\n</html>\n'
 

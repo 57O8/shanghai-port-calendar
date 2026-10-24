@@ -4,6 +4,7 @@
 读取 data/auto_matches.json（自动抓取）与 data/manual_matches.json（手工维护），
 合并、去重后生成 output/shanghai_port.ics。
 """
+import hashlib
 import json
 import os
 from datetime import datetime, timedelta, timezone
@@ -35,6 +36,28 @@ def load(path):
         return json.load(f)
 
 
+def make_uid(m, start):
+    """基于比赛内容生成稳定 UID。
+
+    不能用列表索引（i）：一旦在中间插入/删除一场比赛，其后所有事件的索引
+    平移，UID 随之全变。客户端会把它们当成全新事件——提醒被重置、用户对
+    事件的本地修改（标题、备注、自定义提醒）全部丢失。订阅人数越多，被这
+    种"无谓重排"波及的人越多。
+
+    改用 时间+主客队+赛事 的哈希作稳定键：
+      - 别的比赛增删        -> 本场 UID 不变（不受影响）
+      - 本场改期/改对阵     -> UID 变化（正是我们要的：旧事件移除、新事件生效）
+    """
+    key = "|".join([
+        start.strftime("%Y%m%dT%H%M"),
+        (m.get("home") or "").strip(),
+        (m.get("away") or "").strip(),
+        (m.get("competition") or "").strip(),
+    ])
+    digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
+    return f"shanghai-port-{digest}@fcshanghaiport"
+
+
 def main():
     auto = load(AUTO_FILE)
     manual = load(MANUAL_FILE)
@@ -61,13 +84,13 @@ def main():
         "X-WR-TIMEZONE:Asia/Shanghai",
     ]
 
-    for i, m in enumerate(events):
+    for m in events:
         try:
             start = parse_datetime(m["date"], m["time"])
         except Exception:
             continue
         end = start + timedelta(hours=2)
-        uid = f"shanghai-port-{start.strftime('%Y%m%d%H%M')}-{i}@fcshanghaiport"
+        uid = make_uid(m, start)
         summary = f"【{m.get('competition', '')}】{m.get('home', '')} vs {m.get('away', '')}"
         description = f"{m.get('round', '')} | {m.get('competition', '')}"
         location = m.get("venue", "")
