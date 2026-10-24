@@ -1,0 +1,59 @@
+name: Update ICS
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 22 * * *'   # 每天北京时间 06:00 自动运行
+  workflow_dispatch:       # 允许手动点击触发
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch fixtures (auto)
+        run: python scripts/fetch_cfl.py
+
+      - name: Generate ICS
+        run: python scripts/generate_ics.py
+
+      - name: Build review page
+        run: python scripts/build_review.py
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Commit fixtures cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          MSG="chore: refresh fixtures cache"
+          if [ -f official/schedules/UPDATE_NOTICE.md ]; then
+            MSG="chore: refresh fixtures cache [!] 官方赛程图已更新，请核对 official/schedules 与 data/manual_matches.json"
+          fi
+          git add data/auto_matches.json official/
+          git diff --cached --quiet || git commit -m "$MSG"
+          git push || echo "nothing to push"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
