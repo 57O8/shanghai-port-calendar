@@ -12,6 +12,7 @@
 import base64
 import json
 import os
+import re
 import shutil
 from datetime import datetime, date
 
@@ -22,6 +23,7 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 IMAGES_DIR = os.path.join(OUTPUT_DIR, "images")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "review.html")
 INDEX_FILE = os.path.join(OUTPUT_DIR, "index.html")
+QR_FILE = os.path.join(OUTPUT_DIR, "qrcode.svg")
 
 # 需要人工核对的赛事 -> 官方图代号
 REVIEW_COMPS = [("亚冠", "afc"), ("足协杯", "cfa")]
@@ -39,6 +41,19 @@ AVATAR_SRC = os.path.join(BASE_DIR, "assets", "ego.jpg")
 
 # Actions 中自动注入；本地运行时为空，则隐藏"编辑"按钮
 REPO = os.environ.get("GITHUB_REPOSITORY", "").strip()
+
+# 访问统计（GoatCounter：无 cookie、不存 IP、不跨站追踪）——**当前关闭**。
+# 站点码 = 注册用户名的小写形式；后台看板 https://57o8.goatcounter.com
+#
+# 现状：留空 → 页面不注入任何统计代码，零外部请求（这是默认状态）。
+# 想开启：把下面的空串换成 "57o8"，重新构建即可；页面文案会自动跟着变。
+#         同时记得在 make_qrcode.py 里把 QR_REF 设成 "qr"，二维码才会带渠道标记。
+#
+# 实现刻意"不加载 count.js"：用内联的 1×1 信标直接打 /count 接口。
+#   · 少一个来自 gc.zgo.at 的第三方脚本（国内网络更稳，也不用担心 CDN 被墙）；
+#   · 页面上只有一个指向 goatcounter.com 的图片请求，隐私边界清楚可解释。
+# 局限：统计不到真实订阅数——.ics 由日历客户端后台拉取，不执行 JS。
+GOATCOUNTER_CODE = os.environ.get("GOATCOUNTER_CODE", "").strip()
 
 CSS = """
 :root{--bg:#f6f7f9;--card:#fff;--line:#e5e7eb;--txt:#1f2328;--muted:#6b7280;--accent:#c8102e}
@@ -117,6 +132,18 @@ h1{margin:14px 0 6px;font-size:23px;font-weight:700;letter-spacing:.3px}
 .alt summary::marker{color:var(--muted)}
 .alt p{margin:0 0 8px;font-size:12px;color:var(--muted);line-height:1.6}
 .alt[open]{padding-bottom:12px}
+/* 信任说明：降低"陌生链接不敢点"的门槛 */
+.trust{margin:16px 0 0;padding:12px 14px;background:#fafbfc;border-left:3px solid var(--accent);border-radius:8px}
+.trust-h{font-size:13px;font-weight:700;margin-bottom:7px}
+.trust ul{margin:0;padding-left:17px}
+.trust li{font-size:12.5px;color:var(--muted);margin:4px 0;line-height:1.6}
+.trust li b{color:var(--txt);font-weight:600}
+.trust a{color:var(--accent);text-decoration:none}
+.trust a:hover{text-decoration:underline}
+.trust-note{margin:8px 0 0;font-size:12px;color:var(--muted)}
+/* 二维码：内联 SVG，宽度交给 CSS 控制 */
+.qrbox{display:flex;justify-content:center;padding:6px 0 2px}
+.qrbox svg{width:172px;height:172px;border:1px solid var(--line);border-radius:8px;background:#fff}
 """
 
 
@@ -218,6 +245,46 @@ def render_section(comp, code, matches, img, img_time):
             '</div></section>')
 
 
+def load_qrcode_svg():
+    """读取构建期生成的二维码 SVG 并内联进首页（页面自包含，不依赖外部资源）。
+
+    去掉固定的 width/height，改由 CSS 控制尺寸，避免 410px 的原生尺寸撑破卡片。
+    """
+    if not os.path.exists(QR_FILE):
+        return ""
+    with open(QR_FILE, encoding="utf-8") as f:
+        svg = f.read().strip()
+    svg = re.sub(r'\s(?:width|height)="\d+"', "", svg, count=2)
+    return svg
+
+
+def render_trust():
+    """信任说明区：直接回答"这链接靠谱吗、点下去会发生什么"。"""
+    if REPO:
+        repo_link = ('<a href="https://github.com/' + esc(REPO)
+                     + '" target="_blank" rel="noopener">GitHub 仓库</a>')
+    else:
+        repo_link = "GitHub 仓库"
+    stat_line = (
+        '<li><b>不加载任何第三方脚本</b>，只看总量不认人：一条匿名计数请求'
+        '（GoatCounter，不写 cookie、不存 IP、不做跨站追踪）；不想被计入就在地址后加 '
+        '<code>#toggle-goatcounter</code></li>\n'
+        if GOATCOUNTER_CODE else
+        '<li><b>不加载任何第三方脚本</b>，页面没有任何外部请求</li>\n')
+    return (
+        '<div class="trust">\n'
+        '<div class="trust-h">订阅前你可能想知道的</div>\n'
+        '<ul>\n'
+        '<li><b>不用登录、不用授权任何账号</b>，只是往你的日历里加一个只读订阅源</li>\n'
+        '<li><b>不做用户画像、不要手机号</b>：页面没有 cookie，也没有广告</li>\n'
+        + stat_line +
+        '<li><b>数据来源公开</b>：中足联官网、上海海港官网发布的赛程</li>\n'
+        '<li><b>全部代码公开可查</b>：' + repo_link + '，赛程怎么来的都能追溯</li>\n'
+        '</ul>\n'
+        '<p class="trust-note">随时可退订：在日历 App 里删掉这个日历即可，不影响其他日程。</p>\n'
+        '</div>\n')
+
+
 def render_profile(avatar_uri):
     """首页作者卡：头像 + 57O8 + 全平台账号（抖音置首）。"""
     if avatar_uri:
@@ -245,12 +312,78 @@ def render_profile(avatar_uri):
         '</div>\n</div>\n')
 
 
+def track_script(extra_js=""):
+    """GoatCounter 统计代码：内联 1×1 信标，不加载任何第三方脚本。
+
+    - 每次页面浏览发一次 GET 到 <code>.goatcounter.com/count，带 cookie 说明为"无"；
+    - 非 http(s) 环境（本地 file:// 预览）自动不统计，避免污染线上数据；
+    - 在自己浏览器访问时，地址后加 #toggle-goatcounter 可把本机排除，再加一次恢复；
+      ?notrack=1 / ?notrack=0 是同一开关的显式写法。
+    extra_js 用于在页面里补挂点击事件（订阅、复制、二维码等）。
+    """
+    if not GOATCOUNTER_CODE:
+        return ""
+    return (
+        '<script>\n(function(){\n'
+        'var GC = ' + json.dumps(GOATCOUNTER_CODE) + ';\n'
+        'if (!GC || !/^https?:$/.test(location.protocol)) return;\n'
+        'function off(){ try { return localStorage.getItem("gc-off") === "1"; }'
+        ' catch(e) { return false; } }\n'
+        'function setOff(v){ try { localStorage.setItem("gc-off", v ? "1" : "0"); }'
+        ' catch(e) {} }\n'
+        'var q = {};\n'
+        'location.search.replace(/^\\?/, "").split("&").forEach(function(kv){\n'
+        '  if (!kv) return;\n'
+        '  var i = kv.indexOf("=");\n'
+        '  q[decodeURIComponent(i < 0 ? kv : kv.slice(0, i))] ='
+        ' i < 0 ? "" : decodeURIComponent(kv.slice(i + 1));\n'
+        '});\n'
+        'if (q.notrack === "1") setOff(true);\n'
+        'if (q.notrack === "0") setOff(false);\n'
+        'if (location.hash.indexOf("toggle-goatcounter") >= 0) {\n'
+        '  var to = !off(); setOff(to);\n'
+        '  alert(to ? "已停止统计这台设备的访问" : "已恢复统计这台设备");\n'
+        '}\n'
+        'function track(path, title, ev){\n'
+        '  if (off()) return;\n'
+        '  var u = "https://" + GC + ".goatcounter.com/count?p="'
+        ' + encodeURIComponent(path);\n'
+        '  if (title) u += "&t=" + encodeURIComponent(title);\n'
+        '  if (ev) u += "&e=true";\n'
+        '  var ref = "";\n'
+        '  if (q.ref) { ref = q.ref; }\n'
+        '  else if (document.referrer'
+        ' && document.referrer.indexOf(location.origin) !== 0) {\n'
+        '    ref = document.referrer;\n'
+        '  }\n'
+        '  if (ref) u += "&ref=" + encodeURIComponent(ref);\n'
+        '  (new Image()).src = u;\n'
+        '}\n'
+        'window.__track = track;\n'
+        'var basePath = new URL(".", location.href).pathname;\n'
+        'var p = "/" + location.pathname.slice(basePath.length);\n'
+        'if (p === "/index.html") p = "/";\n'
+        'track(p, document.title, false);\n'
+        + extra_js +
+        '})();\n</script>\n')
+
+
 def render_index(now, avatar_uri):
     """生成站点首页 index.html：作者卡 + 订阅入口 + 核对面板入口。
 
     订阅链接在浏览器端用 location 拼出绝对地址，故部署到任意域名都正确。
     """
     profile = render_profile(avatar_uri)
+    qr_svg = load_qrcode_svg()
+    if qr_svg:
+        qr_block = ('<details class="alt">\n'
+                    '<summary>扫码订阅 / 分享给朋友</summary>\n'
+                    '<p>二维码指向本页，扫码后先看到说明与订阅按钮，再决定要不要订。'
+                    '可截图发到小红书、抖音图文，或直接让朋友扫。</p>\n'
+                    '<div class="qrbox">' + qr_svg + '</div>\n'
+                    '</details>\n')
+    else:
+        qr_block = ""
     head = ('<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n'
             '<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
@@ -269,6 +402,7 @@ def render_index(now, avatar_uri):
         '</div>\n'
         '<p class="hint">iPhone 点「订阅到日历」可直接唤起日历；'
         'Outlook 用下方链接「从 Internet 订阅」。</p>\n'
+        + render_trust() +
         '<div class="meta">\n'
         '<div>覆盖赛事：<b>中超 · 中乙(梯队) · 亚冠 · 足协杯</b></div>\n'
         '<div>自动更新：<b>每天 06:00</b>（GitHub Actions）</div>\n'
@@ -284,6 +418,7 @@ def render_index(now, avatar_uri):
         '<div class="ics"><code id="mirror">&hellip;</code>'
         '<button class="mini" id="copy2">复制</button></div>\n'
         '</details>\n'
+        + qr_block +
         '</div></div>\n')
     script = (
         '<script>\n(function(){\n'
@@ -321,7 +456,27 @@ def render_index(now, avatar_uri):
         '  }); }\n'
         '}\n'
         '})();\n</script>\n')
-    return head + body + script + '</body>\n</html>\n'
+    # 统计：页面浏览 + 4 个关键点击（都在 track_script 里统一注入）
+    extra = (
+        'function hook(id, path, title){\n'
+        '  var el = document.getElementById(id);\n'
+        '  if (el) el.addEventListener("click", function(){'
+        ' track(path, title, true); });\n'
+        '}\n'
+        'hook("sub", "/click/subscribe", "点击订阅到日历");\n'
+        'hook("copy", "/click/copy-ics", "复制订阅链接");\n'
+        'hook("copy2", "/click/copy-mirror", "复制备用链接");\n'
+        'var qrd = document.querySelector("details.alt .qrbox");\n'
+        'if (qrd) {\n'
+        '  var qd = qrd.parentNode;\n'
+        '  qd.addEventListener("toggle", function(){\n'
+        '    if (qd.open) track("/click/qrcode", "展开二维码", true);\n'
+        '  });\n'
+        '}\n'
+        'var rv = document.querySelector(\'a[href="review.html"]\');\n'
+        'if (rv) rv.addEventListener("click", function(){'
+        ' track("/click/review-panel", "打开核对面板", true); });\n')
+    return head + body + script + track_script(extra) + '</body>\n</html>\n'
 
 
 def main():
@@ -373,7 +528,9 @@ def main():
         'Actions 会自动重建日历。</li>\n'
         '</ol>\n<p>' + edit_html + '</p>\n'
         '<p class="sig">上海海港赛程日历 · by ' + esc(AUTHOR) + '</p>\n'
-        '</footer>\n</body>\n</html>\n')
+        '</footer>\n'
+        + track_script() +
+        '</body>\n</html>\n')
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
