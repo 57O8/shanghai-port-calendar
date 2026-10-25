@@ -35,6 +35,11 @@ jobs:
       - name: Generate ICS
         run: python scripts/generate_ics.py
 
+      - name: Generate subscribe QR code
+        run: python scripts/make_qrcode.py
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
       - name: Build review page
         run: python scripts/build_review.py
         env:
