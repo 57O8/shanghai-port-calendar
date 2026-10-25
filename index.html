@@ -43,6 +43,18 @@ h1{margin:14px 0 6px;font-size:23px;font-weight:700;letter-spacing:.3px}
 .alt summary::marker{color:var(--muted)}
 .alt p{margin:0 0 8px;font-size:12px;color:var(--muted);line-height:1.6}
 .alt[open]{padding-bottom:12px}
+/* 信任说明：降低"陌生链接不敢点"的门槛 */
+.trust{margin:16px 0 0;padding:12px 14px;background:#fafbfc;border-left:3px solid var(--accent);border-radius:8px}
+.trust-h{font-size:13px;font-weight:700;margin-bottom:7px}
+.trust ul{margin:0;padding-left:17px}
+.trust li{font-size:12.5px;color:var(--muted);margin:4px 0;line-height:1.6}
+.trust li b{color:var(--txt);font-weight:600}
+.trust a{color:var(--accent);text-decoration:none}
+.trust a:hover{text-decoration:underline}
+.trust-note{margin:8px 0 0;font-size:12px;color:var(--muted)}
+/* 二维码：内联 SVG，宽度交给 CSS 控制 */
+.qrbox{display:flex;justify-content:center;padding:6px 0 2px}
+.qrbox svg{width:172px;height:172px;border:1px solid var(--line);border-radius:8px;background:#fff}
 </style>
 </head>
 <body>
@@ -68,10 +80,21 @@ h1{margin:14px 0 6px;font-size:23px;font-weight:700;letter-spacing:.3px}
 <a class="btn ghost" href="review.html">赛程核对面板</a>
 </div>
 <p class="hint">iPhone 点「订阅到日历」可直接唤起日历；Outlook 用下方链接「从 Internet 订阅」。</p>
+<div class="trust">
+<div class="trust-h">订阅前你可能想知道的</div>
+<ul>
+<li><b>不用登录、不用授权任何账号</b>，只是往你的日历里加一个只读订阅源</li>
+<li><b>不做用户画像、不要手机号</b>：页面没有 cookie，也没有广告</li>
+<li><b>不加载任何第三方脚本</b>，页面没有任何外部请求</li>
+<li><b>数据来源公开</b>：中足联官网、上海海港官网发布的赛程</li>
+<li><b>全部代码公开可查</b>：<a href="https://github.com/57O8/shanghai-port-calendar" target="_blank" rel="noopener">GitHub 仓库</a>，赛程怎么来的都能追溯</li>
+</ul>
+<p class="trust-note">随时可退订：在日历 App 里删掉这个日历即可，不影响其他日程。</p>
+</div>
 <div class="meta">
 <div>覆盖赛事：<b>中超 · 中乙(梯队) · 亚冠 · 足协杯</b></div>
 <div>自动更新：<b>每天 06:00</b>（GitHub Actions）</div>
-<div>最近生成：<b>2026-10-24 22:16</b></div>
+<div>最近生成：<b>2026-10-25 16:26</b></div>
 <div class="ics"><code id="ics">shanghai_port.ics</code><button class="mini" id="copy">复制链接</button></div>
 </div>
 <details class="alt" id="alt" hidden>
