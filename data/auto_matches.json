@@ -587,7 +587,7 @@
     "competition": "中乙",
     "venue": "深圳青少年足球训练基地中心场",
     "round": "第30轮",
-    "status": "Fixture"
+    "status": "Played"
   },
   {
     "date": "2026-11-08",
@@ -597,6 +597,6 @@
     "competition": "中超",
     "venue": "上汽浦东足球场",
     "round": "第30轮",
-    "status": "Fixture"
+    "status": "Played"
   }
 ]
